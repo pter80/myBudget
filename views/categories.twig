@@ -1,0 +1,106 @@
+{% extends "layout.twig" %}
+
+{% block entete %}
+  <h1>{{ entete }}</h1>
+{% endblock %}
+
+{% block content %}
+  
+  <p>Welcomes</p>
+  <div id="app">
+    <table>
+      <tr>
+        <th>Libellé</th>
+        <th>Action</th>
+      </tr>
+      <tr v-for="(category, index) in categories">
+        <td>(% category.lib %)</td>
+        <td>
+          <button v-on:click="edit(index)">Modifier</button>
+          <button v-on:click="del(index)">Supprimer</button>
+        </td>
+      </tr>
+    </table>
+    <div>
+      Libellé : <input v-model="category.lib" @keydown="saisie" />
+      <button v-on:click="add">Ajoute</button>
+      <button v-on:click="update()">Update</button>
+    </div>
+    
+    <script type="application/javascript"> 
+        $(document).ready(function(){
+          console.log("Page chargée");
+        });
+        
+        var app = new Vue({
+          el: '#app',
+          delimiters: ["(%","%)"],
+          data: {
+            message: 'plop',
+            buttonLabel: "",
+            isSelected: [],
+            categories: {},
+            index: null,
+            category: {id: '',lib: ""}
+          },
+          beforeMount() {
+            this.getAll();
+            //this.items=<% items %>;
+            //app.items=items;
+          },
+          methods: {
+            saisie: function() {
+              console.log("Saisie d'un nouveau libelle");
+              app.buttonLabel="Ajouter";
+              
+            },
+            getAll: function() {
+              fetch("http://195.154.118.169:3000/categories/getCategories")
+              .then(function(response) {
+                console.log(response);
+                return response.json();
+              })
+              .then(function(json) {
+                app.categories=json.categories;
+                console.log("json",json);
+              });
+            },
+            add: function() {
+              var myInit = { 
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({lib:app.category.lib})
+              };
+              console.log(myInit);
+              fetch("http://195.154.118.169:3000/categories", myInit)
+                .then(function(response) {
+                  console.log(response);
+                  return response.json();
+                })
+                .then(function(json) {
+                  app.getAll();
+                  console.log("json",json);
+                });
+              //entrer dans le login l'ajout
+            },
+            edit: function(index) {
+              console.log("Edit",index)
+              app.index=index;
+              app.buttonLabel="";
+              app.category.lib=app.categories[index].lib;
+            },
+            update: function() {
+              console.log("Update",app.index)
+              
+              app.buttonLabel="";
+              app.categories[app.index].lib=app.category.lib;
+            },
+            del: function(index) {
+              console.log("Delete",index);
+              app.categories.splice(index,1)
+            }
+          }
+      })
+    </script> 
+{% endblock %}
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Titre de la page</title>
+  <link rel="stylesheet" href="stylesheets/style.css">
+  
+  <script type="text/javascript" src="javascripts/jQuery.js"></script>
+  <script type="text/javascript" src="javascripts/moment.js"></script>
+  <script type="text/javascript" src="javascripts/vue.js"></script>
+</head>
+<body>
+  {% block entete %}
+    <h1>Entete par default</h1>
+  {% endblock %}
+  {% block menu %}
+    <div id=menu>
+      <div class=menu>
+        <a href="/categories">Catégories</a>
+      </div>
+      <div class=menu>
+        <a href="/operationsRecurentes">Opérations récurentes</a>
+      </div>
+    </div>
+  {% endblock %}
+  {% block content %}
+  {% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,231 @@
+{% extends "layout.twig" %}
+
+{% block entete %}
+  <h1>{{ entete }}</h1>
+  <p>Welcome</p>
+{% endblock %}
+{% block content %}
+  <style>
+    .over {
+      background: red;
+    }
+  </style>
+  <div id="app">
+    <div style="height: 550px; width: 1400px;display:flex;justify-content: space-between;">
+      <div style="height: 500px;overflow-y: scroll">
+        <table>
+          <thead>
+            <tr>
+              <th> Id</th>
+              <th> Jour prélèvement</th>
+              <th> Libelle</th>
+              <th> Catégorie</th>
+              <th> Montant</th>
+              <th> Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item , index) in items" >
+              <td><% item.id %></td>
+              <td><% item.date_fin|formatDate %></td>
+              <td><% item.libo %></td>
+              <td><% item.libc %></td>
+              <td v-bind:style="item.montant > 0 ? 'color:green' : 'color:red'"><% item.montant %></td>
+              <td> 
+                <button v-on:click="del(item.id)">Supprimer</button>
+                <button v-on:click="edit(index)">Modifier</button>
+              </td>
+            </tr>
+            
+          </tbody>
+          <tfoot>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td ><span style="font-size: x-large;font-weight:bold"><% total %></span></td>
+              <td></td>
+                
+            </tr> 
+          </tfoot>
+        </table>
+      
+      </div>
+      
+      
+      <div style="height:550px; width:400px; display:inline-flex; border: 1px solid green">
+    </div>
+
+    
+    </div>
+
+    //***************************************************************
+
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th> Id</th>
+            <th> Jour prélèvement</th>
+            <th> Libelle</th>
+            <th> Catégorie</th>
+            <th> Montant</th>
+            <th> Action</th>
+          </tr>
+        </thead>
+        <tr>
+          <td><input v-model="id"/></td> 
+          <td><input v-model="date_fin" id="date_fin"/></td>  
+          <td><input v-model="lib"/></td>
+          <td>
+            <select v-model="catSelected"  >
+              <option disabled value="">Choisissez</option>
+              <option v-for="category in categories" v-bind:value="category.id">
+                <% category.lib %>
+              </option>
+            </select>
+            
+          </td>
+          <td><input v-model="montant"/></td> 
+          <td>
+            <button v-on:click="valid">Valider</button>
+            <button v-on:click="read">Read</button>
+            <button v-on:click="create">Créer</button>
+          </td>
+        </tr>
+          
+      </table>
+    </div>
+  </div>
+  
+  <script type="application/javascript"> 
+    
+    Vue.filter('formatDate', function(value) {
+      if (value) {
+        //console.log('formatDate',value);
+        return moment(String(value)).format('DD')
+      }
+    });
+    
+    var app = new Vue({
+      el: '#app',
+      delimiters: ["<%","%>"],
+      data: {
+        message: 'plop',
+        items: [],
+        indexEdited: null,
+        id: null,
+        date_fin: '',
+        lib: '',
+        montant: '',
+        //hover: false,
+        catSelected: 0,
+        categories: {{ categories }}
+      },
+      
+      computed: {
+        total: function() {
+          let sum = 0;
+          this.items.forEach(function(item){
+            sum+=item.montant;
+            console.log('sum',sum);
+          })
+          return sum;
+        }
+      },
+      mounted() {
+        this.read();
+      },
+      methods: {
+        selectRow: function() {
+          //console.log($(this));
+          //$(this).parent().addClass("over");
+        },
+        unSelectRow: function() {
+          //$(this).removeClass("over");
+        },
+        read: function() {
+          //console.log("Read");
+          fetch("http://195.154.118.169:3000/operationsRecurentes/all")
+            .then(function(response) {
+              //console.log(response);
+              return response.json();
+            })
+            .then(function(json) {
+              if (json.success) {
+                app.items=json.items;
+              }
+              else {
+                //app.items=[];
+              }
+              console.log("json",json);
+            });
+            
+        },
+        edit: function(index) {
+          var row=app.items[index];
+          this.id=row.id;
+          this.date_fin=moment(String(row.date_fin)).format('DD/MM/YYYY');
+          this.lib=row.lib;
+          this.montant=row.montant;
+          this.indexEdited=index;
+        },
+        create: function() {
+          console.log("Create");
+          this.id=0;
+          this.date_fin="";
+          this.lib="";
+          this.montant="";
+          this.indexEdited=0;
+        },
+        
+        valid: function() {
+          var date = new Date(app.date_fin);
+          if (app.id==0){
+            console.log("Add");
+            $.ajax({
+              url: "/operationsRecurentes/add",
+              context: document.body,
+              method: 'POST',
+              data: {date_fin: app.date_fin, lib: app.lib, montant: app.montant, catSelected: app.catSelected},
+              dataType: "json",
+              success: function (result) {
+                app.items=result;
+                console.log("Read OK",app.items);
+              }
+            });  
+          }
+          else {
+            $.ajax({
+              url: "/operationsRecurentes",
+              context: document.body,
+              method: 'PUT',
+              data: {id: app.id, date_fin: app.date_fin, lib: app.lib, montant: app.montant, catSelected: app.catSelected},
+              dataType: "json",
+              success: function (result) {
+                app.items=result.items;
+                //app.items[app.indexEdited]={id: app.id, updatedData:{date_fin: app.date_fin, lib: app.lib, montant: app.montant}}
+                console.log("Mise a jour OK",result);// do something here
+              }
+            })
+          };
+          
+        },
+        del:function(opeId) {
+          console.log("Suppression de l'opération : "+opeId)
+        }
+      }
+          
+    })
+    $(document).ready(function(){
+      console.log("Page chargée");
+    });
+  </script>
+{% endblock %}
+
+</html>
+      
+      
+    
+      
+      

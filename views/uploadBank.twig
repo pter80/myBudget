@@ -1,0 +1,98 @@
+{% extends "layout.twig" %}
+
+{% block content %}
+  <h1>Entete</h1>
+  <p>Welcomes</p>
+  <div id="app">
+      <table>
+          <tr>
+              <th>Date</th>
+              <th>Libellé</th>
+              <th>Montant</th>
+              <th>Action</th>
+          </tr>
+                  
+          <tr v-for="(item, index) in items" :numLig="index">
+              <td><% item.date %></td>
+              <td><% item.libelle %></td>
+              <td><% item.montant %></td>
+              <td><button v-on:click="keep(index)">Conserver</button></td>
+          </tr>
+          
+      </table>
+    </div>
+    
+    <script type="application/javascript"> 
+        $(document).ready(function(){
+          console.log("Page chargée");
+        });
+        
+        var app = new Vue({
+          el: '#app',
+          delimiters: ["<%","%>"],
+          data: {
+            message: 'plop',
+            isSelected: [],
+            items: {}
+          },
+          beforeMount() {
+            console.log("beforeMount");
+            
+            fetch("http://195.154.118.169:3000/uploadBank/getData")
+              .then(function(response) {
+                console.log(response);
+                return response.json();
+              })
+              .then(function(json) {
+                app.items=json;
+                console.log("json",json);
+              })
+            ;
+              
+            
+            //this.items=<% items %>;
+            //app.items=items;
+            
+          },
+          methods: {
+            keep: function(index) {
+              
+              console.log("Keep",index);
+              //Modification de la couleur de la ligne sélectionnée
+              var tag="tr[numLig='"+index+"']";
+              console.log($(tag));
+              $(tag).addClass("selected");
+              
+              var myInit = { 
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(app.items[index])
+              };
+              fetch("http://195.154.118.169:3000/uploadBank",myInit)
+                .then(function(response) {
+                  console.log(response.json);
+                  return response.json();
+                })
+                .then(function(json) {
+                  //app.items=json;
+                  console.log("json",json);
+                })
+              ;
+              //console.log($("tr[numLig=data.index]"));
+              /*
+              $.ajax({
+                url: "/operationsRecurentes/all",
+                context: document.body,
+                method: 'GET',
+                success: function (result) {
+                  app.items=result;
+                  console.log("Read OK",app.items);
+                }
+              });
+              */
+            }
+          }
+        })
+    </script> 
+{% endblock %}
+</html>
