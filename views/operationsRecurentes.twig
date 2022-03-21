@@ -49,17 +49,22 @@
             </tr> 
           </tfoot>
         </table>
-      
+      {# ***************************************************************#}
       </div>
       
       
       <div style="height:550px; width:400px; display:inline-flex; border: 1px solid green">
-    </div>
+        <h4>CATEGORIES</h4>
+        <ul v-for(categorie in categories)>
+          <li><% categorie.lib %></li>
+        </ul>
+
+      </div>
 
     
     </div>
 
-    //***************************************************************
+    {# *************************************************************** #}
 
     <div>
       <table>
@@ -148,12 +153,13 @@
           //console.log("Read");
           fetch("http://195.154.118.169:3000/operationsRecurentes/all")
             .then(function(response) {
-              //console.log(response);
+              console.log(response);
               return response.json();
             })
             .then(function(json) {
               if (json.success) {
                 app.items=json.items;
+                app.categories=json.categories;
               }
               else {
                 //app.items=[];

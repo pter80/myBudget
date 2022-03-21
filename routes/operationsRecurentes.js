@@ -14,18 +14,7 @@ var server = express();
 server.use(bodyParser.urlencoded({ extended: true }));
 
 router.get('/', function(req, res, next) {
-    knex('category')
-    .select()
-    //.returning('id','lib')
-    .then((rows) => {
-      console.log({success: true,rows: JSON.stringify(rows)});
-      var categories=JSON.stringify(rows);
-      res.render('operationsRecurentes.twig', {entete:"Gestion des opérations récurentes",categories: categories});
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.json({success: false, message: 'An error occurred, please try again later.'});
-    })
+    return
 });
 
 
@@ -36,7 +25,7 @@ function getAll(req,res,next) {
         .orderByRaw("o.jour_echeance")
         .leftJoin({c:'category'}, {'o.category_id': 'c.id'})
         .then((items) => {
-          res.json({success: true,items: items});
+          res.send(JSON.stringify(items));
         })
         .catch((err) => {
           console.error(err);
@@ -44,9 +33,26 @@ function getAll(req,res,next) {
         })
 }
 
+function getCategories(req,res,next) {
+    knex('category')
+        .select()
+        //.returning('id','lib')
+        .then((rows) => {
+            console.log({success: true,rows: JSON.stringify(rows)});
+            res.send(JSON.stringify(rows));
+            res.render('operationsRecurentes.twig', {entete:"Gestion des opérations récurentes",categories: categories});
+        })
+        .catch((err) => {
+        console.error(err);
+        return res.json({success: false, message: 'An error occurred, please try again later.'});
+        })
+}
+
 
 router.get("/all",function(req,res,next) {
-    getAll(req,res,next);
+    var categories = getCategories(req,res,next);
+    var opeRecurentes = getAll(req,res,next);
+    return res.json({success:true,coucou:"coucou",categories:categories,items:opeRecurentes});
 });
 
 router.post("/post",function(req, res, next) {
